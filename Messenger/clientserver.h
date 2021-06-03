@@ -20,7 +20,7 @@ private:
     quint16 blockSize;
 
     enum TypeOfInputBlock {
-        SIGNIN,
+        SIGNIN = 5,
         SIGNINRESPONSE,
         FRIEND,
         MESSEGE,

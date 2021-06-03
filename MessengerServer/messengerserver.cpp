@@ -35,59 +35,57 @@ void MessengerServer::slotNewConnection() {
 }
 
 void MessengerServer::slotReadClient() {
-    TypeOfInputBlock typeOfBlock;
-    SignIn tempSignIn;
-
     QTcpSocket* tempTcpSocket = (QTcpSocket*)sender();
 
     QDataStream in(tempTcpSocket);
-    while (true) {
-        if (!blockSize) {
-            if (tempTcpSocket->bytesAvailable() < sizeof(blockSize)) break;
-            in >> blockSize;
-        }
-        if (tempTcpSocket->bytesAvailable() < blockSize) break;
+    if (!blockSize) {
+        if (tempTcpSocket->bytesAvailable() < sizeof(blockSize)) return;
+        in >> blockSize;
+    }
+    if (tempTcpSocket->bytesAvailable() < blockSize) return;
+    else blockSize = 0;
 
-        in >> typeOfBlock;
-        switch (typeOfBlock) {
-        case TypeOfInputBlock::SIGNIN:
-            in >> tempSignIn;
-            proccessSignIn(tempTcpSocket, tempSignIn);
-            break;
-        case TypeOfInputBlock::MESSEGE:
-        {
-            QString to;
-            QString text;
-            bool temp;
-            in >> to >> temp >> text;
-            proccessMessege(currentClients[tempTcpSocket], db.getIdByLogin(to), text);
-        }
-            break;
-        case TypeOfInputBlock::SEARCH:
-        {
-            QString searchLogin;
-            in >> searchLogin;
-            proccessSearch(tempTcpSocket, searchLogin);
-        }
-            break;
-        case TypeOfInputBlock::REQUEST:
-        {
-            QString requestLogin;
-            in >> requestLogin;
-            proccessRequest(currentClients[tempTcpSocket], db.getIdByLogin(requestLogin));
-        }
-            break;
-        case TypeOfInputBlock::REQUSTRESPONSE:
-        {
-            QString requestLogin;
-            bool isAccept;
-            in >> requestLogin >> isAccept;
-            proccessRequestResponse(currentClients[tempTcpSocket], db.getIdByLogin(requestLogin), isAccept);
-        }
-            break;
-        }
-
-        blockSize = 0;
+    quint16 typeOfBlock;
+    in >> typeOfBlock;
+    switch (typeOfBlock) {
+    case TypeOfInputBlock::SIGNIN:
+    {
+        SignIn tempSignIn;
+        in >> tempSignIn;
+        proccessSignIn(tempTcpSocket, tempSignIn);
+    }
+        break;
+    case TypeOfInputBlock::MESSEGE:
+    {
+        QString to;
+        QString text;
+        bool temp;
+        in >> to >> temp >> text;
+        proccessMessege(currentClients[tempTcpSocket], db.getIdByLogin(to), text);
+    }
+        break;
+    case TypeOfInputBlock::SEARCH:
+    {
+        QString searchLogin;
+        in >> searchLogin;
+        proccessSearch(tempTcpSocket, searchLogin);
+    }
+        break;
+    case TypeOfInputBlock::REQUEST:
+    {
+        QString requestLogin;
+        in >> requestLogin;
+        proccessRequest(currentClients[tempTcpSocket], db.getIdByLogin(requestLogin));
+    }
+        break;
+    case TypeOfInputBlock::REQUSTRESPONSE:
+    {
+        QString requestLogin;
+        bool isAccept;
+        in >> requestLogin >> isAccept;
+        proccessRequestResponse(currentClients[tempTcpSocket], db.getIdByLogin(requestLogin), isAccept);
+    }
+        break;
     }
 }
 
@@ -154,7 +152,7 @@ void MessengerServer::send(QTcpSocket* socket, SignInResponse signInResponse) {
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
 
-    out << quint16{0} << TypeOfInputBlock::SIGNINRESPONSE << signInResponse;
+    out << quint16{0} << (quint16)TypeOfInputBlock::SIGNINRESPONSE << signInResponse;
     out.device()->seek(0);
     out << quint16(arrBlock.size() - sizeof(quint16));
 
@@ -165,7 +163,7 @@ void MessengerServer::send(QTcpSocket *socket, TypeOfInputBlock type, QString lo
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
 
-    out << quint16{0} << type << login;
+    out << quint16{0} << (quint16)type << login;
     out.device()->seek(0);
     out << quint16(arrBlock.size() - sizeof(quint16));
 
@@ -176,7 +174,7 @@ void MessengerServer::send(QTcpSocket *socket, QString dialogName, bool isYour, 
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
 
-    out << quint16{0} << TypeOfInputBlock::MESSEGE << dialogName << isYour << text;
+    out << quint16{0} << (quint16)TypeOfInputBlock::MESSEGE << dialogName << isYour << text;
     out.device()->seek(0);
     out << quint16(arrBlock.size() - sizeof(quint16));
 
