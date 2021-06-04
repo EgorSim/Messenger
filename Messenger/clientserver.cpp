@@ -5,6 +5,24 @@
 #include <QHostAddress>
 #include <QByteArray>
 
+template<typename Enum,
+         typename = typename std::enable_if<std::is_enum<Enum>::value>::type>
+QDataStream& operator>>(QDataStream& stream, Enum& e) {
+    quint16 v;
+    stream >> v;
+    e = static_cast<Enum>(v);
+    return stream;
+}
+
+template<typename Enum,
+         typename = typename std::enable_if<std::is_enum<Enum>::value>::type>
+QDataStream& operator<<(QDataStream& stream, Enum& e) {
+    qint16 v;
+    stream << v;
+    e = static_cast<Enum>(v);
+    return stream;
+}
+
 ClientServer::ClientServer(MainWindow* guiMainWindow, QObject *parent) :
     QObject(parent),
     guiMainWindow(guiMainWindow),

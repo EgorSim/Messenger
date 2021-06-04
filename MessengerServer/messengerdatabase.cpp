@@ -17,14 +17,14 @@ MessengerDatabase::MessengerDatabase(QObject *parent) : QObject(parent) {
 
 int MessengerDatabase::getIdByLogin(QString login) {
     QSqlQuery query = QSqlQuery{db};
-    query.exec("select id from users where login='" + login + "'");
+    query.exec(QStringLiteral("select id from users where login=%1").arg(login));
     query.next();
     return query.record().value(0).toInt();
 }
 
 QString MessengerDatabase::getLoginById(int id) {
     QSqlQuery query = QSqlQuery{db};
-    query.exec("select login from users where id=" + QString::number(id) + ";");
+    query.exec(QStringLiteral("select login from users where id=%1;").arg(QString::number(id)));
     query.next();
     return query.record().value(0).toString();
 }
@@ -33,8 +33,8 @@ QVector<QString> MessengerDatabase::getFriendsById(int id) {
     QVector<QString> result;
 
     QSqlQuery query = QSqlQuery{db};
-    query.exec("select friend1_id, friend2_id from friends where friend1_id='" +
-               QString::number(id) + "' or friend2_id='" + QString::number(id) + "'");
+    query.exec(QStringLiteral("select friend1_id, friend2_id from friends where friend1_id=%1 or friend2_id=%2;")
+               .arg(QString::number(id), QString::number(id)));
 
     while (query.next()) {
         int a = query.value("friend1_id").toInt();
@@ -49,8 +49,8 @@ QVector<QString> MessengerDatabase::getFriendsById(int id) {
 QVector<std::tuple<QString, bool, QString>> MessengerDatabase::getMessegesById(int id) {
     QVector<std::tuple<QString, bool, QString>> result;
     QSqlQuery query = QSqlQuery{db};
-    query.exec("select from_id, to_id, messege_text from messeges where from_id=" +
-               QString::number(id) + " or to_id=" + QString::number(id) + ";");
+    query.exec(QStringLiteral("select from_id, to_id, messege_text from messeges where from_id=%1 or to_id=%2;")
+               .arg(QString::number(id), QString::number(id)));
 
     while (query.next()) {
         int a = query.value("from_id").toInt();
@@ -67,7 +67,7 @@ QVector<int> MessengerDatabase::getRequestsById(int id) {
     QVector<int> result;
 
     QSqlQuery query = QSqlQuery{db};
-    query.exec("select from_id from friendship_requests where to_id=" + QString::number(id) + ";");
+    query.exec(QStringLiteral("select from_id from friendship_requests where to_id=%1;").arg(QString::number(id)));
     while (query.next()) {
         result.push_back(query.value("from_id").toInt());
     }
@@ -77,17 +77,19 @@ QVector<int> MessengerDatabase::getRequestsById(int id) {
 bool MessengerDatabase::checkSignIn(SignIn &signIn) {
     QSqlQuery query = QSqlQuery{db};
     if (signIn.getIsLogin()) {
-        query.exec("select login, password from users where login='" + signIn.getLogin() + "' and password='" + signIn.getPassword() + "'");
+        query.exec(QStringLiteral("select login, password from users where login=%1 and password=%2;")
+                   .arg(signIn.getLogin(), signIn.getPassword()));
         if (query.numRowsAffected() == 0) {
             return false;
         }
     }
     else {
-        query.exec("select * from users where login='" + signIn.getLogin() + "'");
+        query.exec(QStringLiteral("select * from users where login=%1").arg(signIn.getLogin()));
         if (query.numRowsAffected() != 0) {
             return false;
         }
-        query.exec("insert into users (login, password) values ('" + signIn.getLogin() + "', '" + signIn.getPassword() + "');");
+        query.exec(QStringLiteral("insert into users (login, password) values ('%1', '%2')")
+                   .arg(signIn.getLogin(), signIn.getPassword()));
     }
     return true;
 }
@@ -95,31 +97,35 @@ bool MessengerDatabase::checkSignIn(SignIn &signIn) {
 void MessengerDatabase::addMessege(int idFrom, int idTo, QString text) {
     QSqlQuery query = QSqlQuery{db};
 
-    query.exec("insert into messeges (from_id, to_id, messege_text) values('" +
-               QString::number(idFrom) + "', '" + QString::number(idTo) + "', '" +
-               text + "')");
+    query.exec(QStringLiteral("insert into messeges (from_id, to_id, messege_text) values('%1', '%2', '%3');")
+               .arg(QString::number(idFrom), QString::number(idTo), text));
 }
 
 void MessengerDatabase::addRequest(int idFrom, int idTo) {
     QSqlQuery query = QSqlQuery{db};
-    if (!isContainRequest(idFrom, idTo) && !isContainFriends(idFrom, idTo)) query.exec("insert into friendship_requests (from_id, to_id) values(" + QString::number(idFrom) + ", " + QString::number(idTo) + ")");
+    if (!isContainRequest(idFrom, idTo) && !isContainFriends(idFrom, idTo))
+        query.exec(QStringLiteral("insert into friendship_requests (from_id, to_id) values(%1, %2);")
+                   .arg(QString::number(idFrom), QString::number(idTo)));
 }
 
 void MessengerDatabase::removeRequest(int idFrom, int idTo) {
     QSqlQuery query = QSqlQuery{db};
-    if (!query.exec("delete from friendship_requests where from_id=" + QString::number(idTo) + " and to_id=" + QString::number(idFrom) + ";"))
+    if (!query.exec(QStringLiteral("delete from friendship_requests where from_id=%1 and to_id=%2")
+                    .arg(QString::number(idTo), QString::number(idFrom))))
         qDebug() << query.lastError().text();
 }
 
 void MessengerDatabase::addFriends(int friend1, int friend2) {
     QSqlQuery query = QSqlQuery{db};
-    if (!isContainFriends(friend1, friend2)) query.exec("insert into friends (friend1_id, friend2_id) values(" + QString::number(friend1) + ", " + QString::number(friend2) + ");");
+    if (!isContainFriends(friend1, friend2))
+        query.exec(QStringLiteral("insert into friends (friend1_id, friend2_id) values(%1, %2);")
+                   .arg(QString::number(friend1), QString::number(friend2)));
 }
 
 bool MessengerDatabase::isContainRequest(int idFrom, int idTo) {
     QSqlQuery query = QSqlQuery{db};
-
-    query.exec("select * from friendship_requests where from_id=" +QString::number(idFrom) + " and to_id=" + QString::number(idTo) + ";");
+    query.exec(QStringLiteral("select * from friendship_requests where from_id=%1 and to_id=%2;")
+               .arg(QString::number(idFrom), QString::number(idTo)));
     return query.numRowsAffected();
 }
 
