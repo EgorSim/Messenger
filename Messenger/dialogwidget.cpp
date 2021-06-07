@@ -1,5 +1,4 @@
 #include "dialogwidget.h"
-#include <QDebug>
 
 DialogWidget::DialogWidget(QString login) : login(login) {
     // Memory allocate

@@ -14,6 +14,7 @@ class MessengerServer : public QObject
     Q_OBJECT
 public:
     explicit MessengerServer(int port, QObject *parent = nullptr);
+    ~MessengerServer();
 private:
     QTcpServer* tcpServer;
     MessengerDatabase db;

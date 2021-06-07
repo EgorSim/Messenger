@@ -1,4 +1,3 @@
-#include <QDebug>
 
 #include "mainwindow.h"
 #include "clientserver.h"

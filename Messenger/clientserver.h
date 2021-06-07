@@ -12,7 +12,7 @@ class ClientServer : public QObject
     Q_OBJECT
 public:
     explicit ClientServer(MainWindow* guiMainWindow, QObject *parent = nullptr);
-
+    ~ClientServer();
 private:
     MainWindow* guiMainWindow;
 
@@ -20,7 +20,7 @@ private:
     quint16 blockSize;
 
     enum TypeOfInputBlock {
-        SIGNIN = 5,
+        SIGNIN,
         SIGNINRESPONSE,
         FRIEND,
         MESSEGE,

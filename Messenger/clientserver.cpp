@@ -1,7 +1,6 @@
 #include "clientserver.h"
 #include "SignInResponse.h"
 
-#include <QDebug>
 #include <QHostAddress>
 #include <QByteArray>
 
@@ -36,6 +35,8 @@ ClientServer::ClientServer(MainWindow* guiMainWindow, QObject *parent) :
 
     QObject::connect(tcpSocket, SIGNAL(readyRead()), SLOT(slotReadyRead()));
 }
+
+ClientServer::~ClientServer() { tcpSocket->close(); }
 
 void ClientServer::slotReadyRead() {
     QDataStream in(tcpSocket);
@@ -136,7 +137,6 @@ void ClientServer::slotRequest(QString requestLogin) {
 }
 
 void ClientServer::slotRequestResponse(QString login, bool isAccept) {
-    qDebug() << "login: " << login << "isAccept" << isAccept;
     QByteArray arrBlock;
     QDataStream out(&arrBlock, QIODevice::WriteOnly);
 

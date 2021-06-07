@@ -2,7 +2,6 @@
 #include <QSqlQuery>
 #include <QSqlRecord>
 #include <QSqlField>
-#include <QDebug>
 
 #include "messengerdatabase.h"
 
@@ -110,9 +109,8 @@ void MessengerDatabase::addRequest(int idFrom, int idTo) {
 
 void MessengerDatabase::removeRequest(int idFrom, int idTo) {
     QSqlQuery query = QSqlQuery{db};
-    if (!query.exec(QStringLiteral("delete from friendship_requests where from_id=%1 and to_id=%2")
-                    .arg(QString::number(idTo), QString::number(idFrom))))
-        qDebug() << query.lastError().text();
+    query.exec(QStringLiteral("delete from friendship_requests where from_id=%1 and to_id=%2")
+                    .arg(QString::number(idTo), QString::number(idFrom)));
 }
 
 void MessengerDatabase::addFriends(int friend1, int friend2) {

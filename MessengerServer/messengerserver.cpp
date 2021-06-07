@@ -32,6 +32,8 @@ MessengerServer::MessengerServer(int port, QObject *parent) : QObject(parent), b
     QObject::connect(tcpServer, SIGNAL(newConnection()), SLOT(slotNewConnection()));
 }
 
+MessengerServer::~MessengerServer() { tcpServer->close(); }
+
 QTcpSocket* MessengerServer::getSocketById(int id) {
     QTcpSocket* result{nullptr};
     foreach (QTcpSocket* temp, currentClients.keys()) {
